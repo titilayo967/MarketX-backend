@@ -136,6 +136,11 @@ export class LoggerService {
     });
   }
 
+  private withCorrelationId(meta: Record<string, any>): Record<string, any> {
+    const correlationId = getCorrelationId();
+    return correlationId ? { correlationId, ...meta } : meta;
+  }
+
   /**
    * Log error level message
    */

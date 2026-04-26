@@ -54,6 +54,7 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    this.logger.info('Creating order', { buyerId: createOrderDto.buyerId });
     return await this.dataSource.transaction(async (manager) => {
       const paymentCurrency =
         createOrderDto.paymentCurrency || SupportedCurrency.USD;
@@ -166,6 +167,7 @@ export class OrdersService {
   }
 
   async cancelOrder(id: string, userId: string): Promise<Order> {
+    this.logger.info('Cancelling order', { orderId: id, userId });
     return await this.dataSource.transaction(async (manager) => {
       const order = await manager.findOne(Order, { where: { id } });
 
@@ -227,6 +229,10 @@ export class OrdersService {
     id: string,
     updateOrderStatusDto: UpdateOrderStatusDto,
   ): Promise<Order> {
+    this.logger.info('Updating order status', {
+      orderId: id,
+      newStatus: updateOrderStatusDto.status,
+    });
     const order = await this.findOne(id);
     const previousStatus = order.status;
 

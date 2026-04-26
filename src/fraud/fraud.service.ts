@@ -30,12 +30,15 @@ export class FraudService {
     private readonly cacheService: CacheService,
     private readonly emailService: EmailService,
     private readonly adminWebhookService: AdminWebhookService,
+    logger: LoggerService,
     private readonly logger: LoggerService,
     private readonly auditService: AuditService,
     private readonly eventEmitter: EventEmitter2,
     @Optional()
     private readonly adminService?: AdminService,
-  ) {}
+  ) {
+    this.logger = logger;
+  }
 
   async analyzeRequest(input: {
     userId?: string;
@@ -170,7 +173,9 @@ export class FraudService {
             }
           } catch (err) {
             this.logger.error(
-              `Failed to lock account for user ${input.userId}: ${err.message}`,
+              `Failed to lock account for user ${input.userId}`,
+              { userId: input.userId },
+              err instanceof Error ? err : new Error(String(err)),
             );
           }
         }
