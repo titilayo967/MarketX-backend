@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run secret scan with Gitleaks
-        uses: zricethezav/gitleaks-action@v8
+        uses: gitleaks/gitleaks-action@v2
         with:
           version: 'v8.18.0'
           args: '--path=./ --verbose'
