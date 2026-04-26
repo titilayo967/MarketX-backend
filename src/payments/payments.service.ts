@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -45,6 +46,7 @@ export class PaymentsService {
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
     logger: LoggerService,
+    private readonly logger: LoggerService,
   ) {
     this.logger = logger;
     // Initialize Stellar SDK
@@ -135,10 +137,9 @@ export class PaymentsService {
 
     const savedPayment = await this.paymentsRepository.save(payment);
 
-    this.logger.info('Payment initiated', {
-      orderId: initiatePaymentDto.orderId,
-      paymentId: savedPayment.id,
-    });
+    this.logger.info(
+      `Payment initiated for order ${initiatePaymentDto.orderId}: ${savedPayment.id}`,
+    );
 
     // Emit event for payment monitoring
     this.eventEmitter.emit(
@@ -230,10 +231,9 @@ export class PaymentsService {
     order.updatedAt = new Date();
     await this.ordersRepository.save(order);
 
-    this.logger.info('Payment confirmed', {
-      paymentId,
-      orderId: payment.orderId,
-    });
+    this.logger.info(
+      `Payment ${paymentId} confirmed. Order ${payment.orderId} updated to PAID status`,
+    );
 
     // Emit event for downstream services
     this.eventEmitter.emit(

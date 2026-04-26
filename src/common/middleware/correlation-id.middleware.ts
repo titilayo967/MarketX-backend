@@ -2,12 +2,15 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { correlationStorage } from '../context/correlation.context';
+import { runWithCorrelationId } from '../logger/correlation-context';
+
+export const CORRELATION_ID_HEADER = 'x-correlation-id';
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
     const correlationId =
-      (req.headers['x-correlation-id'] as string) ||
+      (req.headers[CORRELATION_ID_HEADER] as string) ||
       (req.headers['x-request-id'] as string) ||
       uuidv4();
 
@@ -15,6 +18,9 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     res.setHeader('x-correlation-id', correlationId);
 
     correlationStorage.run({ correlationId }, () => next());
+    res.setHeader(CORRELATION_ID_HEADER, correlationId);
+
+    runWithCorrelationId(correlationId, () => next());
   }
 }
 
@@ -25,7 +31,7 @@ export class CorrelationIdHelper {
 
   static createHeaders(correlationId: string): Record<string, string> {
     return {
-      'x-correlation-id': correlationId,
+      [CORRELATION_ID_HEADER]: correlationId,
       'x-request-id': correlationId,
     };
   }

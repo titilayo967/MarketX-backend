@@ -191,7 +191,14 @@ export class OrdersService {
 
       order.status = OrderStatus.CANCELLED;
       order.cancelledAt = new Date();
-      return await manager.save(order);
+      const cancelledOrder = await manager.save(order);
+
+      this.logger.info('Order cancelled', {
+        orderId: cancelledOrder.id,
+        buyerId: userId,
+      });
+
+      return cancelledOrder;
     });
   }
 
@@ -257,6 +264,12 @@ export class OrdersService {
     order.status = updateOrderStatusDto.status;
 
     const updatedOrder = await this.ordersRepository.save(order);
+
+    this.logger.info('Order status updated', {
+      orderId: updatedOrder.id,
+      previousStatus,
+      newStatus: updatedOrder.status,
+    });
 
     this.eventEmitter.emit(
       EventNames.ORDER_UPDATED,
