@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -13,13 +13,12 @@ import { CacheService } from '../cache/cache.service';
 import { EmailService } from '../email/email.service';
 import { User, UserStatus } from '../entities/user.entity';
 import { AdminWebhookService } from '../admin/admin-webhook.service';
+import { LoggerService } from '../common/logger/logger.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditActionType, AuditStatus } from '../audit/entities/audit-log.entity';
 
 @Injectable()
 export class FraudService {
-  private readonly logger = new Logger(FraudService.name);
-
   constructor(
     @InjectRepository(FraudAlert)
     private readonly repo: Repository<FraudAlert>,
@@ -31,6 +30,7 @@ export class FraudService {
     private readonly cacheService: CacheService,
     private readonly emailService: EmailService,
     private readonly adminWebhookService: AdminWebhookService,
+    private readonly logger: LoggerService,
     private readonly auditService: AuditService,
     private readonly eventEmitter: EventEmitter2,
     @Optional()

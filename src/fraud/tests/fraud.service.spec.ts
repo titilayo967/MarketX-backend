@@ -58,6 +58,11 @@ describe('Fraud rules and service', () => {
       notifyAdmin: jest.fn(async () => ({})),
     };
 
+    const fakeLogger: any = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
     const fakeAuditService: any = {
       logStateChange: jest.fn(async () => ({})),
     };
@@ -74,6 +79,7 @@ describe('Fraud rules and service', () => {
       fakeCacheService,
       fakeEmailService,
       fakeAdminWebhookService,
+      fakeLogger,
       fakeAuditService,
       fakeEventEmitter,
     );
@@ -136,6 +142,11 @@ describe('Fraud rules and service', () => {
       notifyAdmin: jest.fn(async () => ({})),
     };
 
+    const fakeLogger: any = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
     const fakeAuditService: any = {
       logStateChange: jest.fn(async () => ({})),
     };
@@ -152,6 +163,7 @@ describe('Fraud rules and service', () => {
       fakeCacheService,
       fakeEmailService,
       fakeAdminWebhookService,
+      fakeLogger,
       fakeAuditService,
       fakeEventEmitter,
     );

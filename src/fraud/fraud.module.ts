@@ -10,6 +10,7 @@ import { GeolocationService } from '../geolocation/geolocation.service';
 import { Order } from '../orders/entities/order.entity';
 import { User } from '../entities/user.entity';
 import { CacheModule } from '../cache/cache.module';
+import { LoggerModule } from '../common/logger/logger.module';
 import { AuditModule } from '../audit/audit.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { AuditModule } from '../audit/audit.module';
     TypeOrmModule.forFeature([FraudAlert, Order, User]),
     AdminModule,
     CacheModule,
+    LoggerModule,
     AuditModule,
     EventEmitterModule.forRoot(),
   ],
