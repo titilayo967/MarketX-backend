@@ -13,6 +13,7 @@ import { OrdersModule } from '../orders/orders.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 import { RewardsModule } from '../rewards/rewards.module';
+import { LoggerModule } from '../common/logger/logger.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { RewardsModule } from '../rewards/rewards.module';
     WalletModule,
     WebhooksModule,
     RewardsModule,
+    LoggerModule,
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService, PaymentMonitorService],

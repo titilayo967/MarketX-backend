@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  Logger,
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,10 +29,11 @@ import {
   EventNames,
 } from '../common/events';
 import { RewardsService } from '../rewards/rewards.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class PaymentsService {
-  private readonly logger = new Logger(PaymentsService.name);
+  private readonly logger: LoggerService;
   private stellarServer: StellarSdk.Horizon.Server;
   private networkPassphrase: string;
 
@@ -47,7 +47,9 @@ export class PaymentsService {
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
     private readonly rewardsService: RewardsService,
+    logger: LoggerService,
   ) {
+    this.logger = logger;
     // Initialize Stellar SDK
     const horizonUrl = this.configService.get<string>(
       'STELLAR_HORIZON_URL',
@@ -162,7 +164,7 @@ export class PaymentsService {
 
     const savedPayment = await this.paymentsRepository.save(payment);
 
-    this.logger.log(
+    this.logger.info(
       `Payment initiated for order ${initiatePaymentDto.orderId}: ${savedPayment.id}. Original: $${order.totalAmount}, After points: $${finalAmount}`,
     );
 
@@ -219,9 +221,10 @@ export class PaymentsService {
       payment.failedAt = new Date();
       await this.paymentsRepository.save(payment);
 
-      this.logger.warn(
-        `Payment ${paymentId} validation failed: ${errorMessage}`,
-      );
+      this.logger.warn('Payment validation failed', {
+        paymentId,
+        reason: errorMessage,
+      });
 
       this.eventEmitter.emit(
         EventNames.PAYMENT_FAILED,
@@ -255,7 +258,7 @@ export class PaymentsService {
     order.updatedAt = new Date();
     await this.ordersRepository.save(order);
 
-    this.logger.log(
+    this.logger.info(
       `Payment ${paymentId} confirmed. Order ${payment.orderId} updated to PAID status`,
     );
 
@@ -294,7 +297,7 @@ export class PaymentsService {
       payment.failedAt = new Date();
       await this.paymentsRepository.save(payment);
 
-      this.logger.warn(`Payment ${paymentId} timed out`);
+      this.logger.warn('Payment timed out', { paymentId });
 
       this.eventEmitter.emit(
         EventNames.PAYMENT_TIMEOUT,

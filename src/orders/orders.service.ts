@@ -16,6 +16,7 @@ import { Order, OrderStatus } from './entities/order.entity';
 import { AdminWebhookService } from '../admin/admin-webhook.service';
 import { PaymentStatus } from '../payments/dto/payment.dto';
 import { StatusTransitionValidator } from '../common/validators';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class OrdersService {
@@ -49,9 +50,11 @@ export class OrdersService {
     private readonly eventEmitter: EventEmitter2,
     private readonly inventoryService: InventoryService,
     private readonly adminWebhookService: AdminWebhookService,
+    private readonly logger: LoggerService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    this.logger.info('Creating order', { buyerId: createOrderDto.buyerId });
     return await this.dataSource.transaction(async (manager) => {
       const paymentCurrency =
         createOrderDto.paymentCurrency || SupportedCurrency.USD;
@@ -134,6 +137,13 @@ export class OrdersService {
 
       const savedOrder = await manager.save(order);
 
+      this.logger.info('Order created', {
+        orderId: savedOrder.id,
+        buyerId: savedOrder.buyerId,
+        totalAmount: savedOrder.totalAmount,
+        currency: savedOrder.currency,
+      });
+
       for (const item of savedOrder.items) {
         await this.inventoryService.reserveInventory(
           item.productId,
@@ -157,6 +167,7 @@ export class OrdersService {
   }
 
   async cancelOrder(id: string, userId: string): Promise<Order> {
+    this.logger.info('Cancelling order', { orderId: id, userId });
     return await this.dataSource.transaction(async (manager) => {
       const order = await manager.findOne(Order, { where: { id } });
 
@@ -180,7 +191,14 @@ export class OrdersService {
 
       order.status = OrderStatus.CANCELLED;
       order.cancelledAt = new Date();
-      return await manager.save(order);
+      const cancelledOrder = await manager.save(order);
+
+      this.logger.info('Order cancelled', {
+        orderId: cancelledOrder.id,
+        buyerId: userId,
+      });
+
+      return cancelledOrder;
     });
   }
 
@@ -211,6 +229,10 @@ export class OrdersService {
     id: string,
     updateOrderStatusDto: UpdateOrderStatusDto,
   ): Promise<Order> {
+    this.logger.info('Updating order status', {
+      orderId: id,
+      newStatus: updateOrderStatusDto.status,
+    });
     const order = await this.findOne(id);
     const previousStatus = order.status;
 
@@ -242,6 +264,12 @@ export class OrdersService {
     order.status = updateOrderStatusDto.status;
 
     const updatedOrder = await this.ordersRepository.save(order);
+
+    this.logger.info('Order status updated', {
+      orderId: updatedOrder.id,
+      previousStatus,
+      newStatus: updatedOrder.status,
+    });
 
     this.eventEmitter.emit(
       EventNames.ORDER_UPDATED,
