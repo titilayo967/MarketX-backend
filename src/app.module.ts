@@ -47,12 +47,15 @@ import { AdminModule } from './admin/admin.module';
 import { OrdersModule } from './orders/orders.module';
 import { MilestonesModule } from './milestones/milestones.module';
 import { ArchivingModule } from './archiving/archiving.module';
+import { RewardsModule } from './rewards/rewards.module';
+import { CurrencyModule } from './currency/currency.module';
 
 
 // ── Entities ───────────────────────────────────────────────────────────────
 import { ProductImage } from './media/entities/image.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { CouponUsage } from './coupons/entities/coupon-usage.entity';
+import { RewardPoints } from './rewards/entities/reward-points.entity';
 
 // ── Guards & Middleware ─────────────────────────────────────────────────────
 import { AdminGuard } from './guards/admin.guard';
@@ -61,6 +64,7 @@ import { ThrottleGuard } from './common/guards/throttle.guard';
 import { DynamicThrottlerGuard } from './auth/guards/dynamic-throttler.guard';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { RequestMonitorMiddleware } from './fraud/middleware/request-monitor.middleware';
+import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware';
 
 @Module({
   imports: [
@@ -95,7 +99,7 @@ import { RequestMonitorMiddleware } from './fraud/middleware/request-monitor.mid
       migrations: ['dist/migrations/*.js'],
       migrationsRun: false,
     }),
-    TypeOrmModule.forFeature([ProductImage, Coupon, CouponUsage]),
+    TypeOrmModule.forFeature([ProductImage, Coupon, CouponUsage, RewardPoints]),
 
     // ── Queue ─────────────────────────────────────────────────────────────
     BullModule.forRoot({
@@ -143,6 +147,8 @@ import { RequestMonitorMiddleware } from './fraud/middleware/request-monitor.mid
     AdminModule,
     OrdersModule,
     ArchivingModule,
+    RewardsModule,
+    CurrencyModule,
   ],
   controllers: [AppController],
   providers: [
@@ -163,6 +169,8 @@ import { RequestMonitorMiddleware } from './fraud/middleware/request-monitor.mid
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(SecurityMiddleware, RequestMonitorMiddleware).forRoutes('*');
+    consumer
+      .apply(CorrelationIdMiddleware, SecurityMiddleware, RequestMonitorMiddleware)
+      .forRoutes('*');
   }
 }

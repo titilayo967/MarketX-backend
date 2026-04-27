@@ -1,5 +1,7 @@
 export enum PaymentStatus {
+  UNPAID = 'unpaid',
   PENDING = 'pending',
+  PAID = 'paid',
   CONFIRMED = 'confirmed',
   FAILED = 'failed',
   TIMEOUT = 'timeout',
@@ -23,6 +25,7 @@ export class InitiatePaymentDto {
   readonly orderId: string;
   readonly currency: PaymentCurrency;
   readonly timeoutMinutes?: number;
+  readonly pointsToUse?: number;
 }
 
 export class PaymentWebhookDto {

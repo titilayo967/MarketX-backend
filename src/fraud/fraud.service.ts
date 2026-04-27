@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FraudAlert } from './entities/fraud-alert.entity';
 import { evaluateAllRules } from './score';
 import { AdminService } from '../admin/admin.service';
@@ -12,11 +13,12 @@ import { CacheService } from '../cache/cache.service';
 import { EmailService } from '../email/email.service';
 import { User, UserStatus } from '../entities/user.entity';
 import { AdminWebhookService } from '../admin/admin-webhook.service';
+import { LoggerService } from '../common/logger/logger.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditActionType, AuditStatus } from '../audit/entities/audit-log.entity';
 
 @Injectable()
 export class FraudService {
-  private readonly logger = new Logger(FraudService.name);
-
   constructor(
     @InjectRepository(FraudAlert)
     private readonly repo: Repository<FraudAlert>,
@@ -28,6 +30,9 @@ export class FraudService {
     private readonly cacheService: CacheService,
     private readonly emailService: EmailService,
     private readonly adminWebhookService: AdminWebhookService,
+    private readonly logger: LoggerService,
+    private readonly auditService: AuditService,
+    private readonly eventEmitter: EventEmitter2,
     @Optional()
     private readonly adminService?: AdminService,
   ) {}
@@ -89,6 +94,34 @@ export class FraudService {
 
       await this.repo.save(alert);
 
+      // Emit audit event for fraud alert creation
+      this.eventEmitter.emit('fraud.alert_created', {
+        userId: input.userId || 'system',
+        actionType: AuditActionType.FRAUD_ALERT,
+        status:
+          alertStatus === 'suspended'
+            ? AuditStatus.WARNING
+            : alertStatus === 'manual_review'
+              ? AuditStatus.WARNING
+              : AuditStatus.SUCCESS,
+        ipAddress: input.ip,
+        resourceType: 'fraud_alert',
+        resourceId: alert.id,
+        statePreviousValue: undefined,
+        stateNewValue: {
+          riskScore: result.riskScore,
+          status: alertStatus,
+          reason: result.reason,
+        },
+        metadata: {
+          alertId: alert.id,
+          orderId: input.orderId,
+          deviceFingerprint: input.deviceFingerprint,
+          triggeredRules: result.triggeredRules,
+          metadata: input.metadata,
+        },
+      });
+
       // --- Automated Account Lockout Protocol (#229) ---
       if (input.userId) {
         const fraudKey = `fraud_flags:${input.userId}`;
@@ -102,8 +135,28 @@ export class FraudService {
             });
 
             if (user && user.status !== UserStatus.LOCKED) {
+              const previousStatus = user.status;
               user.status = UserStatus.LOCKED;
               await this.userRepository.save(user);
+
+              // Emit audit event for lockout
+              this.eventEmitter.emit('fraud.account_locked', {
+                userId: input.userId,
+                actionType: AuditActionType.FRAUD_LOCKOUT,
+                status: AuditStatus.WARNING,
+                ipAddress: input.ip,
+                resourceType: 'user',
+                resourceId: input.userId,
+                statePreviousValue: { status: previousStatus },
+                stateNewValue: { status: UserStatus.LOCKED },
+                metadata: {
+                  fraudAlertId: alert.id,
+                  riskScore: result.riskScore,
+                  flagCount,
+                  triggeredRules: result.triggeredRules,
+                  lockoutReason: `Automated lockout after ${flagCount} fraud flags within 60 minutes`,
+                },
+              });
 
               await this.emailService.sendAccountLocked({
                 userId: input.userId,
@@ -117,7 +170,9 @@ export class FraudService {
             }
           } catch (err) {
             this.logger.error(
-              `Failed to lock account for user ${input.userId}: ${err.message}`,
+              `Failed to lock account for user ${input.userId}`,
+              { userId: input.userId },
+              err instanceof Error ? err : new Error(String(err)),
             );
           }
         }
@@ -193,8 +248,30 @@ export class FraudService {
   ) {
     const alert = await this.repo.findOneBy({ id });
     if (!alert) return null;
+
+    const previousStatus = alert.status;
     alert.status = action.mark;
     await this.repo.save(alert);
+
+    // Emit audit event for fraud review
+    this.eventEmitter.emit('fraud.alert_reviewed', {
+      userId: action.reviewer || 'system',
+      actionType: AuditActionType.FRAUD_REVIEW,
+      status: AuditStatus.SUCCESS,
+      resourceType: 'fraud_alert',
+      resourceId: id,
+      statePreviousValue: { status: previousStatus },
+      stateNewValue: { status: action.mark },
+      metadata: {
+        alertId: id,
+        userId: alert.userId,
+        riskScore: alert.riskScore,
+        previousStatus,
+        newStatus: action.mark,
+        reviewer: action.reviewer || 'system',
+      },
+    });
+
     return alert;
   }
 }

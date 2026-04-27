@@ -9,7 +9,8 @@ Purpose: ensure consistent quality, prevent regressions, and make reviews faster
 - Quick confidence suite: run `npm run pr:check` before opening the PR so the maintained contributor lint, typecheck, and focused regression test suite all pass together.
 - Tests: include unit and/or integration tests that cover the change. For bug fixes, add regression tests.
 - Migrations: if schema or data changes are required, add migration files and clear instructions on applying/rolling back.
-- Documentation: update `README.md`, `docs/`, or module-level docs for any user-facing or developer-facing change.
+- Documentation: update `README.md`, `docs/`, module-level docs, or generated API docs for any user-facing or developer-facing change.
+- Security: confirm no new secrets or high/critical dependency vulnerabilities are introduced.
 - ADRs: add or update an ADR in `docs/adr/` when the change affects architecture, module boundaries, infrastructure roles, or long-lived domain workflows.
 - Coverage: run the test suite locally; the change should not reduce global coverage meaningfully for the touched area.
 - Issue link: reference an open issue or explain the motivation if one does not exist.
@@ -49,3 +50,7 @@ If a change touches complex domains (payments, escrow, reconciliation, migration
 ---
 
 Thank you for contributing — clear PRs make everyone's life easier.
+
+## PR template
+
+We provide an official PR template at `.github/PULL_REQUEST_TEMPLATE.md` that surfaces the checklist items automatically when opening a Pull Request. Please use that template — it includes sections for migrations, documentation changes, test instructions, and changelog notes.
