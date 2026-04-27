@@ -19,6 +19,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RabbitMqModule } from './messaging/rabbitmq.module';
 import { IdempotencyModule } from './common/idempotency/idempotency.module';
+import { ConfigValidationModule } from './common/config/config-validation.module';
 
 // ── Features ───────────────────────────────────────────────────────────────
 import { AuthModule } from './auth/auth.module';
@@ -70,6 +71,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
   imports: [
     // ── Core config ──────────────────────────────────────────────────────
     ConfigModule.forRoot({ isGlobal: true }),
+    ConfigValidationModule,
     ScheduleModule.forRoot(),
 
     /**

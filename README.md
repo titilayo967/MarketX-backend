@@ -60,18 +60,26 @@ npm install
 
 _(Note: As we transition into the open-source phase, we are currently integrating a `docker-compose.yml` to streamline setup)._
 
-For now, assure you have a running **PostgreSQL 15** database and a **Redis** server. Configure your `.env` file at the root of the project with the necessary credentials:
+For now, assure you have a running **PostgreSQL 15** database and a **Redis** server. Copy the `.env.example` file to `.env` and configure your environment variables:
 
-```env
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_NAME=marketx
+```bash
+cp .env.example .env
+```
 
-# Redis
-REDIS_URL=redis://localhost:6379
+Then edit `.env` with your specific configuration. The application will validate required environment variables at startup and provide clear error messages for missing or invalid configurations.
+
+**Required Environment Variables:**
+- `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` - PostgreSQL connection
+- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` - Authentication secrets (must be at least 32 characters)
+
+**Optional but Recommended:**
+- `REDIS_HOST`, `REDIS_PORT` - Redis connection for caching and rate limiting
+- `AMQP_URL` - RabbitMQ for event messaging
+- `STRIPE_API_KEY` - Payment processing
+- `SENDGRID_API_KEY` - Email sending
+- `AWS_*` variables - File storage and backups
+
+See `.env.example` for a complete list of all available configuration options with descriptions.
 
 # RabbitMQ
 AMQP_URL=amqp://guest:guest@localhost:5672
