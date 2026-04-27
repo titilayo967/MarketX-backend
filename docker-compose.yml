@@ -14,15 +14,16 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-marketx}
-      DB_USER: ${DB_USER:-marketx_user}
-      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-marketx}
+      DATABASE_USER: ${DATABASE_USER:-marketx_user}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-secret}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       AMQP_URL: amqp://guest:guest@rabbitmq:5672
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,9 +40,9 @@ services:
     container_name: marketx_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-marketx}
-      POSTGRES_USER: ${DB_USER:-marketx_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_DB: ${DATABASE_NAME:-marketx}
+      POSTGRES_USER: ${DATABASE_USER:-marketx_user}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-secret}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -50,7 +51,7 @@ services:
       test:
         [
           'CMD-SHELL',
-          'pg_isready -U ${DB_USER:-marketx_user} -d ${DB_NAME:-marketx}',
+          'pg_isready -U ${DATABASE_USER:-marketx_user} -d ${DATABASE_NAME:-marketx}',
         ]
       interval: 10s
       timeout: 5s

@@ -39,7 +39,7 @@ Environment
 
 The compose file uses the repository's environment variables with sensible defaults (see `docker-compose.yml`). To override values, create a `.env` file in the repository root or export variables in your shell. Important vars:
 
-- `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD`
 - `REDIS_HOST`, `REDIS_PORT`
 - `AMQP_URL`
 
