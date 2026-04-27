@@ -30,15 +30,12 @@ export class FraudService {
     private readonly cacheService: CacheService,
     private readonly emailService: EmailService,
     private readonly adminWebhookService: AdminWebhookService,
-    logger: LoggerService,
     private readonly logger: LoggerService,
     private readonly auditService: AuditService,
     private readonly eventEmitter: EventEmitter2,
     @Optional()
     private readonly adminService?: AdminService,
-  ) {
-    this.logger = logger;
-  }
+  ) {}
 
   async analyzeRequest(input: {
     userId?: string;
@@ -251,7 +248,7 @@ export class FraudService {
   ) {
     const alert = await this.repo.findOneBy({ id });
     if (!alert) return null;
-    
+
     const previousStatus = alert.status;
     alert.status = action.mark;
     await this.repo.save(alert);
