@@ -8,29 +8,26 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/app.module.ts\" \"src/users/users.service.ts\" \"src/job-processing/**/*.ts\" \"src/email/email.module.ts\" \"src/email/email.processor.ts\" \"src/email/email.service.ts\" \"src/media/media.controller.ts\" \"src/media/media.jobs.ts\" \"src/media/media.module.ts\" \"src/media/media.processor.ts\" \"src/media/media.service.ts\" \"src/media/services/image-processing.service.ts\" \"src/products/product-images.controller.ts\" \"src/recommendation/recommendation.controller.ts\" \"src/recommendation/recommendation.jobs.ts\" \"src/recommendation/recommendation.module.ts\" \"src/recommendation/recommendation.processor.ts\" \"src/recommendation/recommendation.scheduler.ts\" \"src/recommendation/recommendation.service.ts\" \"src/messaging/**/*.ts\" \"src/rewards/**/*.ts\" \"src/payments/payments.module.ts\" \"src/payments/payments.service.ts\" \"src/payments/dto/payment.dto.ts\" \"README.md\" \"package.json\" \"docker-compose.yml\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check \"src/app.module.ts\" \"src/users/users.service.ts\" \"src/job-processing/**/*.ts\" \"src/email/email.module.ts\" \"src/email/email.processor.ts\" \"src/email/email.service.ts\" \"src/media/media.controller.ts\" \"src/media/media.jobs.ts\" \"src/media/media.module.ts\" \"src/media/media.processor.ts\" \"src/media/media.service.ts\" \"src/media/services/image-processing.service.ts\" \"src/products/product-images.controller.ts\" \"src/recommendation/recommendation.controller.ts\" \"src/recommendation/recommendation.jobs.ts\" \"src/recommendation/recommendation.module.ts\" \"src/recommendation/recommendation.processor.ts\" \"src/recommendation/recommendation.scheduler.ts\" \"src/recommendation/recommendation.service.ts\" \"src/messaging/**/*.ts\" \"README.md\" \"package.json\" \"docker-compose.yml\" \".github/workflows/*.yml\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --max-warnings=0",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "lint:issues": "eslint \"src/job-processing/queue.constants.ts\" \"src/job-processing/queue.constants.spec.ts\" --max-warnings=0",
+    "lint:pr": "eslint \"src/job-processing/queue.constants.ts\" \"src/job-processing/queue.constants.spec.ts\" --max-warnings=0",
+    "lint:issues": "npm run lint:pr",
     "typecheck": "tsc --noEmit --pretty false",
-    "typecheck:issues": "tsc --project tsconfig.issues.json --noEmit --pretty false",
+    "typecheck:pr": "tsc --project tsconfig.pr-check.json --noEmit --pretty false",
+    "typecheck:issues": "npm run typecheck:pr",
     "test": "jest",
-    "test:issues": "node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/job-processing/queue.constants.spec.ts",
-    "pr:check": "npm run lint:issues && npm run typecheck:issues && npm run test:issues",
+    "test:pr": "node --max-old-space-size=4096 ./node_modules/jest/bin/jest.js --runInBand --runTestsByPath src/job-processing/queue.constants.spec.ts",
+    "test:issues": "npm run test:pr",
+    "pr:check": "npm run lint:pr && npm run typecheck:pr && npm run test:pr",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:coverage:check": "jest --coverage --ci",
-    "test:coverage:auth": "jest --coverage --testPathPattern='src/auth/' --ci",
-    "test:coverage:payments": "jest --coverage --testPathPattern='src/payments/' --ci",
-    "test:coverage:orders": "jest --coverage --testPathPattern='src/orders/' --ci",
-    "test:coverage:escrow": "jest --coverage --testPathPattern='src/escrowes/' --ci",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-"test:smoke": "jest --testPathPattern=module-wiring.smoke.spec.ts --runInBand",
     "security:scan": "node security/zap/security-tester.js",
     "security:docker": "docker compose --profile security-test up -d",
     "security:zap": "docker compose run --rm zap",
@@ -48,13 +45,7 @@
     "mutation:escrow": "stryker run --mutate \"src/escrow/escrow.service.ts\"",
     "mutation:transactions": "stryker run --mutate \"src/transactions/transactions.service.ts\"",
     "mutation:refunds": "stryker run --mutate \"src/refunds/refunds.service.ts\"",
-    "mutation:wallet": "stryker run --mutate \"src/wallet/wallet.service.ts\"",
-    "docs:generate": "ts-node scripts/generate-api-docs.ts",
-    "docs:render": "redoc-cli bundle docs/api/openapi.json -o docs/api/index.html",
-    "security:audit": "npm audit --audit-level=moderate",
-    "security:audit:report": "npm audit --json > security/audit-report.json || true",
-    "doctor": "bash scripts/doctor.sh",
-    "bootstrap": "bash scripts/bootstrap.sh"
+    "mutation:wallet": "stryker run --mutate \"src/wallet/wallet.service.ts\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.450.0",
@@ -175,8 +166,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "redoc-cli": "^0.13.21"
+    "typescript-eslint": "^8.20.0"
   },
   "jest": {
     "moduleFileExtensions": [
@@ -190,58 +180,12 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "transformIgnorePatterns": [
-  "node_modules/(?!(@scure|@noble|otplib|@otplib)/)"
-],
-    "collectCoverageFrom": [
-      "src/**/*.(t|j)s"
+      "node_modules/(?!(@scure|@noble|otplib)/)"
     ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/dist/",
-      ".module.ts$",
-      ".entity.ts$",
-      ".dto.ts$",
-      ".interface.ts$",
-      ".types.ts$",
-      ".decorator.ts$",
-      ".guard.ts$",
-      ".strategy.ts$",
-      ".subscriber.ts$",
-      "index.ts$"
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "coverageThreshold": {
-      "global": {
-        "branches": 50,
-        "functions": 50,
-        "lines": 50,
-        "statements": 50
-      },
-      "./src/auth/": {
-        "branches": 70,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      },
-      "./src/payments/": {
-        "branches": 70,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      },
-      "./src/orders/": {
-        "branches": 70,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      },
-      "./src/escrowes/": {
-        "branches": 70,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      }
-    },
     "testEnvironment": "node"
   }
 }

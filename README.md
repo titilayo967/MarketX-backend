@@ -127,6 +127,9 @@ Before opening a PR, run the quick confidence suite:
 $ npm run pr:check
 ```
 
+<<<<<<< HEAD
+This command runs the maintained contributor confidence suite: targeted lint checks, targeted TypeScript typechecking, and focused regression tests for the current contribution slice.
+=======
 This command runs issue-slice lint checks, issue-slice TypeScript typechecking, and the focused regression test suite used for this contribution wave.
 ## Architecture Decisions
 
@@ -142,6 +145,7 @@ We use standardized GitHub issue templates to keep triage fast and consistent. P
 - Tech debt: for shortcuts, brittle patterns, dependency alignment, or missing safeguards that reduce engineering velocity or increase risk over time.
 
 Blank issues are disabled so requests consistently include the details reviewers need to triage, scope, and ship changes safely.
+>>>>>>> 19a7b48f152c83b373dd40836b279bc02c65038e
 
 
 ---
@@ -153,6 +157,11 @@ We heavily value test coverage to ensure marketplace stability.
 ```bash
 # Run the quick pre-PR confidence suite
 $ npm run pr:check
+
+# Run individual parts of the confidence suite
+$ npm run lint:pr
+$ npm run typecheck:pr
+$ npm run test:pr
 
 # Run the unit test suite
 $ npm run test
